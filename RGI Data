@@ -1,0 +1,2 @@
+read TotalStocks, {s in 1..TotalStocks} (ID[s], CapTier[s], DevStatus[s], Country[s], Sector[s], Subsector[s], Industry[s], Shares[s], Price[s]) <Project1StockData.txt;
+read TotalLots, {t in 1..TotalLots} (LotStock[t], LotNumShares[t], LotPrice[t], LotStockIndex[t]) <Project1TaxLotData_wID.txt;
