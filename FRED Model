@@ -1,0 +1,26 @@
+param TotalDates;
+
+set Dates := {1..TotalDates};	#FRED data
+set I := {1..7};	#Set of economic indicators 
+
+param Ind {i in I, m in Dates};
+
+set NBER_True := {m in Dates: (Ind[2,m] = 1)};
+set NBER_False := {m in Dates: (Ind[2,m] = 0)};
+
+param Rcard = card(NBER_True);
+param Ncard = card(NBER_False);
+
+var R {i in I};
+var N {i in I};
+var Rb;
+var Nb;
+var RuleR {m in Dates} = sum{i in 3..7}(R[i]*Ind[i,m])+Rb;
+var RuleN {m in Dates} = sum{i in 3..7}(N[i]*Ind[i,m])+Nb;
+
+maximize AverageDistance: 1/Rcard*sum{m in NBER_True} RuleR[m]-10/Ncard*sum{n in NBER_False} RuleR[n]+1/Ncard*sum{n in NBER_False} RuleN[n]-10/Rcard*sum{m in NBER_True} RuleN[m];
+
+subject to RFalseNegative {m in NBER_True}: RuleR[m] >= 0;
+subject to NFalseNegative {m in NBER_False} : RuleN[m] >= 0;
+subject to Rweights: sum{i in 3..7} R[i]^2 <= 1;
+subject to Nweights: sum{i in 3..7} N[i]^2 <= 1;
