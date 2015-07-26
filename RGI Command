@@ -1,0 +1,86 @@
+display {s in Stocks: P[s] > 0} (ID[s], P[s],Price[s]);
+
+
+display {s in Stocks: P[s] > 0} (P[s], Price[s]);
+
+display sum{s in Stocks} P[s] * Price[s];
+
+display {m in Lots} (S[m], Price[LotStockIndex[m]], LotPrice[m]);
+
+display sum{m in Lots} S[m] * Price[LotStockIndex[m]];
+
+display "U.S. benchmark";
+display USStockWeight;
+display "U.S. exposure";
+display (1-.05)*sum{s in USStocks} (H[s]*Price[s])/sum{t in Stocks} (H[t]*Price[t]);
+display "Dev benchmark";
+display DevStockWeight;
+display "Devexposure";
+display (1-.09)*sum{s in DevStocks} (H[s]*Price[s])/sum{t in Stocks} (H[t]*Price[t]);
+display "EM benchmark";
+display EMStockWeight;
+display "EMexposure";
+display sum{s in EMStocks} (H[s]*Price[s])/sum{t in Stocks} (H[t]*Price[t]);
+display "Large benchmark";
+display LargeStockWeight;
+display "Large exposure";
+display sum{s in LargeStocks} (H[s]*Price[s])/sum{t in Stocks} (H[t]*Price[t]);
+display "Mid benchmark";
+display MidStockWeight;
+display "Midexposure";
+display sum{s in MidStocks} (H[s]*Price[s])/sum{t in Stocks} (H[t]*Price[t]);
+display "Small benchmark";
+display SmallStockWeight;
+display "Smallexposure";
+display sum{s in SmallStocks} (H[s]*Price[s])/sum{t in Stocks} (H[t]*Price[t]);
+display "Tech benchmark";
+display TechStockWeight;
+display "Tech exposure";
+display sum{s in TechStocks} (H[s]*Price[s])/sum{t in Stocks} (H[t]*Price[t]);
+display "Health benchmark";
+display HealthStockWeight;
+display "Healthexposure";
+display sum{s in HealthStocks} (H[s]*Price[s])/sum{t in Stocks} (H[t]*Price[t]);
+display "Discretionary benchmark";
+display DiscretionaryStockWeight;
+display "Discretionaryexposure";
+display sum{s in DiscretionaryStocks} (H[s]*Price[s])/sum{t in Stocks} (H[t]*Price[t]);
+display "Staple benchmark";
+display StapleStockWeight;
+display "Stapleexposure";
+display sum{s in StapleStocks} (H[s]*Price[s])/sum{t in Stocks} (H[t]*Price[t]);
+display "Energy benchmark";
+display EnergyStockWeight;
+display "Energyexposure";
+display sum{s in EnergyStocks} (H[s]*Price[s])/sum{t in Stocks} (H[t]*Price[t]);
+display "Material benchmark";
+display MaterialStockWeight;
+display "Material exposure";
+display sum{s in MaterialStocks} (H[s]*Price[s])/sum{t in Stocks} (H[t]*Price[t]);
+display "Durable benchmark";
+display DurableStockWeight;
+display "Durableexposure";
+display sum{s in DurableStocks} (H[s]*Price[s])/sum{t in Stocks} (H[t]*Price[t]);
+display "Financial benchmark";
+display FinancialStockWeight;
+display "Financialexposure";
+display sum{s in FinancialStocks} (H[s]*Price[s])/sum{t in Stocks} (H[t]*Price[t]);
+display "Utility benchmark";
+display UtilityStockWeight;
+display "Utilityexposure";
+display sum{s in UtilityStocks} (H[s]*Price[s])/sum{t in Stocks} (H[t]*Price[t]);
+
+display {s in Stocks} H[s].rc;
+
+display "Loss limit";
+display LossCarryLimit*sum {s in Stocks} (H[s]*Price[s]);
+display sum{m in Lots: LotPrice[m]>Price[LotStockIndex[m]]} (S[m]*(LotPrice[m]-Price[LotStockIndex[m]]))-sum{m in Lots: Price[LotStockIndex[m]]>LotPrice[m]} (S[m] *(Price[LotStockIndex[m]]-LotPrice[m]));
+
+display "Disallowed loss Limit";
+display DisallowedLoss;
+
+display "Budget limit";
+display NetInflow;
+display sum{s in Stocks} (P[s]*Price[s])*(1+BuyCost[s])-sum{m in Lots} S[m]*Price[LotStockIndex[m]]*(1-SellCost[LotStockIndex[m]]);
+
+display {m in Lots: S[m] >= 0} LotStock[m], S[m], LotPrice[m], Price[LotStockIndex[m]];
