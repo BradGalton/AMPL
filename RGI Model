@@ -1,98 +1,108 @@
-set Stocks;  # Stock universe (RGI)
-set Lots;	#Tax lot history
+param TotalStocks;
+param TotalLots;
 
-set USStocks := {s in Stocks: (Country[s] = ’US’)};
-set nonUSStocks :={s in Stocks:  (Country[s] = 'nonUS'};
-set devStocks :={s in Stocks};
-set emStocks :={s in Stocks};
-set largeStocks :={s in Stocks};
-set midStocks :={s in Stocks};
-set smallStocks :={s in Stocks};
-set techStocks :={s in Stocks};
-set healthStocks :={s in Stocks};
-set discStocks :={s in Stocks};
-set stapleStocks :={s in Stocks};
-set energyStocks :={s in Stocks};
-set matStocks :={s in Stocks};
-set durableStocks :={s in Stocks};
-set financialStocks :={s in Stocks};
-set utilityStocks :={s in Stocks};
-set ID {s in Stocks};
+set Stocks := {1..TotalStocks};	#RGI stock index
+set Lots := {1..TotalLots}; #Holdings by tax lot
 
-param NumShares {Stocks};
-param Price {Stocks];
-param NetNewInvestments {Stocks};
-param TaxRate {Stocks};
-param USBuyCost {Stocks};
-param nonUSBuyCost {Stocks};
-param USSellCost {Stocks};
-param nonUSSellCost {Stocks};
+param ID {s in Stocks} symbolic;
+param CapTier {s in Stocks} symbolic;
+param DevStatus {s in Stocks} symbolic;
+param Country {s in Stocks} symbolic;
+param Sector {s in Stocks} integer > 0;
+param Subsector {s in Stocks} integer > 0;
+param Industry {s in Stocks} integer > 0;
+param Shares {s in Stocks} integer > 0;
+param Price {s in Stocks} > 0;
+param LotStock {m in Lots} symbolic;
+param LotNumShares {m in Lots} integer > 0; 
+param LotPrice {m in Lots} > 0;
+param LotStockIndex {m in Lots} integer > 0;
+param NetInflow 		:= 1000000;
+param TaxRate 			:= 0.25;
+param USBuyCost 		:= 0.001;
+param NonUSBuyCost 		:= 0.002;
+param USSellCost 		:= 0.001;
+param NonUSSellCost 	:= 0.002;
+param LossCarryLimit 	:= 0.1;
+param USStockTol 		:= 0.05;
+param EMStockTol 		:= 0.09;
+param DevStockTol 		:= 0.09;
+param CapTierTol 		:= 0.1;
+param SectorTol 		:= 0.08;
+
+set USStocks := {s in Stocks: (Country[s] = "US")};
+set DevStocks := {s in Stocks: (DevStatus[s] = "D")};
+set EMStocks := {s in Stocks: (DevStatus[s] = "E")};
+set LargeStocks := {s in Stocks: (CapTier[s] = "L")};
+set MidStocks := {s in Stocks: (CapTier[s] = "M")};
+set SmallStocks := {s in Stocks: (CapTier[s] = "S")};
+set TechStocks := {s in Stocks: (Sector[s] = 1)};
+set HealthStocks := {s in Stocks: (Sector[s] = 2)};
+set DiscretionaryStocks := {s in Stocks: (Sector[s] = 3)};
+set StapleStocks := {s in Stocks: (Sector[s] = 4)};
+set EnergyStocks := {s in Stocks: (Sector[s] = 6)};
+set MaterialStocks := {s in Stocks: (Sector[s] = 7)};
+set DurableStocks := {s in Stocks: (Sector[s] = 8)};
+set FinancialStocks := {s in Stocks: (Sector[s] = 10)};
+set UtilityStocks := {s in Stocks: (Sector[s] = 11)};
+
 param BuyCost {s in Stocks} = if s in USStocks then USBuyCost else NonUSBuyCost;
 param SellCost {s in Stocks} = if s in USStocks then USSellCost else NonUSSellCost;
-param Capitalization {s in Stocks} = NumShares[s] * Price[s];
-param LotStock {LotStock};
-param LotNumShare {LotStock}; 
-param LotPrice {LotStock};
-param CapitalGains {Stocks} := if s in Price >= m in LotStock then (Price[s]-LotStock[m])*Sales[s]
-param CapitalLoss {Stocks}:= if s in Price < m in LotStock then (LotStock[m]-Price[s])*Sales[s]
+param Capitalization {s in Stocks} = Shares[s] * Price[s];
 param USStockWeight = sum{s in USStocks} Capitalization[s]/sum{t in Stocks} Capitalization[t];
-param devStockWeight = sum{s in devStocks} Capitalization[s]/sum{t in Stocks} Capitalization[t];
-param emStockWeight = sum{s in emStocks} Capitalization[s]/sum{t in Stocks} Capitalization[t];
-param largeStockWeight = sum{s in largeStocks} Capitalization[s]/sum{t in Stocks} Capitalization[t];
-param midStockWeight = sum{s in midStocks} Capitalization[s]/sum{t in Stocks} Capitalization[t];
-param smallStockWeight = sum{s in smallStocks} Capitalization[s]/sum{t in Stocks} Capitalization[t];
-param techStockWeight = sum{s in techStocks} Capitalization[s]/sum{t in Stocks} Capitalization[t];
-param healthStockWeight = sum{s in healthStocks} Capitalization[s]/sum{t in Stocks} Capitalization[t];
-param discStockWeight = sum{s in discStocks} Capitalization[s]/sum{t in Stocks} Capitalization[t];
-param stapleStockWeight = sum{s in stapleStocks} Capitalization[s]/sum{t in Stocks} Capitalization[t];
-param energyStockWeight = sum{s in energyStocks} Capitalization[s]/sum{t in Stocks} Capitalization[t];
-param matStockWeight = sum{s in matStocks} Capitalization[s]/sum{t in Stocks} Capitalization[t];
-param durableStockWeight = sum{s in durableStocks} Capitalization[s]/sum{t in Stocks} Capitalization[t];
-param financialStockWeight = sum{s in financialStocks} Capitalization[s]/sum{t in Stocks} Capitalization[t];
-param utilityStockWeight = sum{s in utilityStocks} Capitalization[s]/sum{t in Stocks} Capitalization[t];
-param USStockBench = sum{s in USStocks} Capitalization[b]/sum{t in Stocks} Capitalization[b];
-param devStockBench = sum{s in devStocks} Capitalization[b]/sum{t in Stocks} Capitalization[b];
-param emStockBench = sum{s in emStocks} Capitalization[b]/sum{t in Stocks} Capitalization[b];
-param largeStockBench = sum{s in largeStocks} Capitalization[b]/sum{t in Stocks} Capitalization[b];
-param midStockBench = sum{s in midStocks} Capitalization[b]/sum{t in Stocks} Capitalization[b];
-param smallStockBench = sum{s in smallStocks} Capitalization[b]/sum{t in Stocks} Capitalization[b];
-param techStockBench = sum{s in techStocks} Capitalization[b]/sum{t in Stocks} Capitalization[b];
-param healthStockBench = sum{s in healthStocks} Capitalization[b]/sum{t in Stocks} Capitalization[b];
-param discStockBench = sum{s in discStocks} Capitalization[b]/sum{t in Stocks} Capitalization[b];
-param stapleStockBench = sum{s in stapleStocks} Capitalization[b]/sum{t in Stocks} Capitalization[b];
-param energyStockBench = sum{s in energyStocks} Capitalization[b]/sum{t in Stocks} Capitalization[b];
-param matStockBench = sum{s in matStocks} Capitalization[b]/sum{t in Stocks} Capitalization[b];
-param durableStockBench = sum{s in durableStocks} Capitalization[b]/sum{t in Stocks} Capitalization[b];
-param financialStockBench = sum{s in financialStocks} Capitalization[b]/sum{t in Stocks} Capitalization[b];
-param utilityStockBench = sum{s in utilityStocks} Capitalization[b]/sum{t in Stocks} Capitalization[b];
-for {m in Lots} {
-	for {s in Stocks} {
-		if ID[s] = LotStock[m] then
-			let LotStockIndex[m] := s;
-			}
-		}
-read TotalLots, {t in 1..TotalLots} (LotStock[t], LotNumShares[t], LotPrice[t]) < MyTaxLotFile;
+param DevStockWeight = sum{s in DevStocks} Capitalization[s]/sum{t in Stocks} Capitalization[t];
+param EMStockWeight = sum{s in EMStocks} Capitalization[s]/sum{t in Stocks} Capitalization[t];
+param LargeStockWeight = sum{s in LargeStocks} Capitalization[s]/sum{t in Stocks} Capitalization[t];
+param MidStockWeight = sum{s in MidStocks} Capitalization[s]/sum{t in Stocks} Capitalization[t];
+param SmallStockWeight = sum{s in SmallStocks} Capitalization[s]/sum{t in Stocks} Capitalization[t];
+param TechStockWeight = sum{s in TechStocks} Capitalization[s]/sum{t in Stocks} Capitalization[t];
+param HealthStockWeight = sum{s in HealthStocks} Capitalization[s]/sum{t in Stocks} Capitalization[t];
+param DiscretionaryStockWeight = sum{s in DiscretionaryStocks} Capitalization[s]/sum{t in Stocks} Capitalization[t];
+param StapleStockWeight = sum{s in StapleStocks} Capitalization[s]/sum{t in Stocks} Capitalization[t];
+param EnergyStockWeight = sum{s in EnergyStocks} Capitalization[s]/sum{t in Stocks} Capitalization[t];
+param MaterialStockWeight = sum{s in MaterialStocks} Capitalization[s]/sum{t in Stocks} Capitalization[t];
+param DurableStockWeight = sum{s in DurableStocks} Capitalization[s]/sum{t in Stocks} Capitalization[t];
+param FinancialStockWeight = sum{s in FinancialStocks} Capitalization[s]/sum{t in Stocks} Capitalization[t];
+param UtilityStockWeight = sum{s in UtilityStocks} Capitalization[s]/sum{t in Stocks} Capitalization[t];
 
-var Weights {s in Stocks} >=0
-var Purchases {s in Stocks}>=0
-var Sales {s in Stocks}:= >=0
+var H {s in Stocks} >= 0;
+var P {s in Stocks} >= 0;
+var S {m in Lots} >= 0, <= LotNumShares[m]; 
+var DisallowedLoss >= 0;
 
-minimize Transaction_Costs: sum{s in BuyCost)+sum{s in SellCost}
+minimize TaxAndTransCost: sum{s in Stocks} (P[s]*BuyCost[s]*Price[s])+sum{m in Lots} (S[m]*(SellCost[LotStockIndex[m]]*Price[LotStockIndex[m]]+TaxRate*(Price[LotStockIndex[m]]-LotPrice[m])))+TaxRate*DisallowedLoss;
 
-subject to NewNetInvestmentLim {s in stocks}: Purchases {s in Stocks} - Sales {s in Stocks} <= NewNetInvestments {Stocks};
-subject to CapitalLossLim {s in Stocks}:= CapitalLoss {s in Stocks}/sum(s in Stocks * Price[s]) <- 0.1
-subject to USStockWeightLim {s in Stocks}: 0.95 * USStockBench <= 1.05 * USStockBench;
-subject to devStockWeightLim {s in Stocks}: 0.91 * devStockBench <= devStockWeight <= 1.09 * devStockBench;
-subject to emStockWeightLim {s in Stocks}: 0.91 * emStockBench <= emStockWeight <= 1.09 * emStockBench;
-subject to largeStockWeightLim {s in Stocks}: 0.9 * largeStockBench <= largeStockWeight <= 1.1 * largeStockBench;
-subject to midStockWeightLim {s in Stocks}: 0.9 * midStockBench <= midStockWeight <= 1.1 * midStockBench; 
-subject to smallStockWeightLim {s in Stocks}: 0.9 * smallStockBench <= smallStockWeight <= 1.1 * smallStockBench;
-subject to techStockWeightLim {s in Stocks}: 0.92 * techStockBench <= techStockWeight <= 1.08 * techStockBench;
-subject to healthStockWeightLim {s in Stocks}: 0.92 * healthStockBench <= healthStockWeight <= 1.08 * healthStockBench;
-subject to discStockWeightLim {s in Stocks}: 0.92 * discStockBench <= discStockWeight <= 1.08 * discStockBench;
-subject to stapleStockWeightLim {s in Stocks}: 0.92 * stapleStockBench <= stapleStockWeight <= 1.08 * stapleStockBench;
-subject to energyStockWeightLim {s in Stocks}: 0.92 * energyStockBench <= energyStockWeight <= 1.08 * energyStockBench; 
-subject to matStockWeightLim {s in Stocks}: 0.92 * matStockBench <= matStockWeight <= 1.08 * matStockBench;
-subject to durableStockWeightLim {s in Stocks}: 0.92 * durableStockBench <= durableStockWeight <= 1.08 * durableStockBench;
-subject to financialStockWeightLim {s in Stocks}: 0.92 * financialStockBench <= financialStockWeight <= 1.08 * financialStockBench;
-subject to utilityStockWeightLim {s in Stocks}: 0.92 * utilityStockBench <= utilityStockWeight <= 1.08 * utilityStockBench;
+subject to LossLimit: sum{m in Lots: LotPrice[m]>Price[LotStockIndex[m]]} (S[m]*(LotPrice[m]-Price[LotStockIndex[m]]))-sum{m in Lots: Price[LotStockIndex[m]]>LotPrice[m]} (S[m] *(Price[LotStockIndex[m]]-LotPrice[m]))<=LossCarryLimit*sum {s in Stocks} (H[s]*Price[s]);
+subject to DisallowedLossLimit: sum{m in Lots: LotPrice[m]>Price[LotStockIndex[m]]} (S[m]*(LotPrice[m]-Price[LotStockIndex[m]]))-sum{m in Lots: Price[LotStockIndex[m]]>LotPrice[m]} (S[m]*(Price[LotStockIndex[m]]-LotPrice[m]))<=DisallowedLoss;
+subject to BudgetLimit: sum{s in Stocks} (P[s]*Price[s])*(1+BuyCost[s])-sum{m in Lots} S[m]*Price[LotStockIndex[m]]*(1-SellCost[LotStockIndex[m]]) = NetInflow;
+subject to AccumulationLimit {s in Stocks}: sum{m in Lots: LotStockIndex[m]=s} (LotNumShares[m]-S[m])+P[s]-H[s] = 0;
+subject to USStockWeightLowerLimit : sum {s in USStocks} (H[s] * Price[s]) - (1-USStockTol) * USStockWeight * sum {t in Stocks} (H[t] * Price[t]) >= 0;
+subject to USStockWeightUpperLimit : sum {s in USStocks} (H[s] * Price[s]) - (1+USStockTol) * USStockWeight * sum {t in Stocks} (H[t] * Price[t]) <= 0;
+subject to DevStockWeightLowerLimit : sum {s in DevStocks} (H[s] * Price[s]) - (1-DevStockTol) * DevStockWeight * sum {t in Stocks} (H[t] * Price[t]) >= 0;
+subject to DevStockWeightUpperLimit : sum {s in DevStocks} (H[s] * Price[s]) - (1+DevStockTol) * DevStockWeight * sum {t in Stocks} (H[t] * Price[t]) <= 0;
+subject to EMStockWeightLowerLimit : sum {s in EMStocks} (H[s] * Price[s]) - (1-EMStockTol) * EMStockWeight * sum {t in Stocks} (H[t] * Price[t]) >= 0;
+subject to EMStockWeightUpperLimit : sum {s in EMStocks} (H[s] * Price[s]) - (1+EMStockTol) * EMStockWeight * sum {t in Stocks} (H[t] * Price[t]) <= 0;
+subject to LargeStockWeightLowerLimit : sum {s in LargeStocks} (H[s] * Price[s]) - (1-CapTierTol) * LargeStockWeight * sum {t in Stocks} (H[t] * Price[t]) >= 0;
+subject to LargeStockWeightUpperLimit : sum {s in LargeStocks} (H[s] * Price[s]) - (1+CapTierTol) * LargeStockWeight * sum {t in Stocks} (H[t] * Price[t]) <= 0;
+subject to MidStockWeightLowerLimit : sum {s in MidStocks} (H[s] * Price[s]) - (1-CapTierTol) * MidStockWeight * sum {t in Stocks} (H[t] * Price[t]) >= 0;
+subject to MidStockWeightUpperLimit : sum {s in MidStocks} (H[s] * Price[s]) - (1+CapTierTol) * MidStockWeight * sum {t in Stocks} (H[t] * Price[t]) <= 0;
+subject to SmallStockWeightLowerLimit : sum {s in SmallStocks} (H[s] * Price[s]) - (1-CapTierTol) * SmallStockWeight * sum {t in Stocks} (H[t] * Price[t]) >= 0;
+subject to SmallStockWeightUpperLimit : sum {s in SmallStocks} (H[s] * Price[s]) - (1+CapTierTol) * SmallStockWeight * sum {t in Stocks} (H[t] * Price[t]) <= 0;
+subject to TechStockWeightLowerLimit : sum {s in TechStocks} (H[s] * Price[s]) - (1-SectorTol) * TechStockWeight * sum {t in Stocks} (H[t] * Price[t]) >= 0;
+subject to TechStockWeightUpperLimit : sum {s in TechStocks} (H[s] * Price[s]) - (1+SectorTol) * TechStockWeight * sum {t in Stocks} (H[t] * Price[t]) <= 0;
+subject to HealthStockWeightLowerLimit : sum {s in HealthStocks} (H[s] * Price[s]) - (1-SectorTol) * HealthStockWeight * sum {t in Stocks} (H[t] * Price[t]) >= 0;
+subject to HealthStockWeightUpperLimit : sum {s in HealthStocks} (H[s] * Price[s]) - (1+SectorTol) * HealthStockWeight * sum {t in Stocks} (H[t] * Price[t]) <= 0;
+subject to DiscretionaryStockWeightLowerLimit : sum {s in DiscretionaryStocks} (H[s] * Price[s]) - (1-SectorTol) * DiscretionaryStockWeight * sum {t in Stocks} (H[t] * Price[t]) >= 0;
+subject to DiscretionaryStockWeightUpperLimit : sum {s in DiscretionaryStocks} (H[s] * Price[s]) - (1+SectorTol) * DiscretionaryStockWeight * sum {t in Stocks} (H[t] * Price[t]) <= 0;
+subject to StapleStockWeightLowerLimit : sum {s in StapleStocks} (H[s] * Price[s]) - (1-SectorTol) * StapleStockWeight * sum {t in Stocks} (H[t] * Price[t]) >= 0;
+subject to StapleStockWeightUpperLimit : sum {s in StapleStocks} (H[s] * Price[s]) - (1+SectorTol) * StapleStockWeight * sum {t in Stocks} (H[t] * Price[t]) <= 0;
+subject to EnergyStockWeightLowerLimit : sum {s in EnergyStocks} (H[s] * Price[s]) - (1-SectorTol) * EnergyStockWeight * sum {t in Stocks} (H[t] * Price[t]) >= 0;
+subject to EnergyStockWeightUpperLimit : sum {s in EnergyStocks} (H[s] * Price[s]) - (1+SectorTol) * EnergyStockWeight * sum {t in Stocks} (H[t] * Price[t]) <= 0;
+subject to MaterialStockWeightLowerLimit : sum {s in MaterialStocks} (H[s] * Price[s]) - (1-SectorTol) * MaterialStockWeight * sum {t in Stocks} (H[t] * Price[t]) >= 0;
+subject to MaterialStockWeightUpperLimit : sum {s in MaterialStocks} (H[s] * Price[s]) - (1+SectorTol) * MaterialStockWeight * sum {t in Stocks} (H[t] * Price[t]) <= 0;
+subject to DurableStockWeightLowerLimit : sum {s in DurableStocks} (H[s] * Price[s]) - (1-SectorTol) * DurableStockWeight * sum {t in Stocks} (H[t] * Price[t]) >= 0;
+subject to DurableStockWeightUpperLimit : sum {s in DurableStocks} (H[s] * Price[s]) - (1+SectorTol) * DurableStockWeight * sum {t in Stocks} (H[t] * Price[t]) <= 0;
+subject to FinancialStockWeightLowerLimit : sum {s in FinancialStocks} (H[s] * Price[s]) - (1-SectorTol) * FinancialStockWeight * sum {t in Stocks} (H[t] * Price[t]) >= 0;
+subject to FinancialStockWeightUpperLimit : sum {s in FinancialStocks} (H[s] * Price[s]) - (1+SectorTol) * FinancialStockWeight * sum {t in Stocks} (H[t] * Price[t]) <= 0;
+subject to UtilityStockWeightLowerLimit : sum {s in UtilityStocks} (H[s] * Price[s]) - (1-SectorTol) * UtilityStockWeight * sum {t in Stocks} (H[t] * Price[t]) >= 0;
+subject to UtilityStockWeightUpperLimit : sum {s in UtilityStocks} (H[s] * Price[s]) - (1+SectorTol) * UtilityStockWeight * sum {t in Stocks} (H[t] * Price[t]) <= 0;
